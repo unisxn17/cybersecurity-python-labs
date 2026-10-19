@@ -61,11 +61,14 @@ def demo() -> int:
 
     section("Доступ через __getitem__ / __setitem__")
     print("account['user']:", account["user"])
-    for key, value in (("password_hash", None), ("session", "not-a-session")):
-        try:
-            account[key] if value is None else account.__setitem__(key, value)
-        except (KeyError, TypeError) as error:
-            print(f"{type(error).__name__}: {error}")
+    try:
+        account["password_hash"]
+    except KeyError as error:
+        print(f"KeyError: {error}")
+    try:
+        account["session"] = "not-a-session"
+    except TypeError as error:
+        print(f"TypeError: {error}")
 
     section("Завершення сеансу за таймаутом")
     account["session"].last_activity -= timedelta(seconds=SESSION_TIMEOUT_SEC + 1)

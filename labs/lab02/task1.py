@@ -7,7 +7,6 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import ClassVar
 
 PBKDF2_ITERATIONS = 600_000
 SALT_SIZE = 16
@@ -140,14 +139,15 @@ class AuditLog:
             print(record)
 
 
-class UserAccount:
-    # ключ -> (атрибут, допустимі типи); хеш і сіль пароля навмисно не доступні
-    _ITEMS: ClassVar[dict[str, tuple[str, tuple[type, ...]]]] = {
-        "user": ("user", (User,)),
-        "session": ("session", (Session, type(None))),
-        "audit_log": ("audit_log", (AuditLog,)),
-    }
+# ключі, доступні через account[...], і допустимі типи; хеш і сіль пароля не доступні
+ACCOUNT_KEYS = {
+    "user": User,
+    "session": (Session, type(None)),
+    "audit_log": AuditLog,
+}
 
+
+class UserAccount:
     def __init__(self, user: User, audit_log: AuditLog | None = None):
         self.user = user
         self.audit_log = audit_log if audit_log is not None else AuditLog()
@@ -180,14 +180,13 @@ class UserAccount:
         return True
 
     def __getitem__(self, key: str):
-        if key not in self._ITEMS:
+        if key not in ACCOUNT_KEYS:
             raise KeyError(key)
-        return getattr(self, self._ITEMS[key][0])
+        return getattr(self, key)
 
     def __setitem__(self, key: str, value) -> None:
-        if key not in self._ITEMS:
+        if key not in ACCOUNT_KEYS:
             raise KeyError(key)
-        attr, types = self._ITEMS[key]
-        if not isinstance(value, types):
+        if not isinstance(value, ACCOUNT_KEYS[key]):
             raise TypeError(f"{key}: неправильний тип {type(value).__name__}")
-        setattr(self, attr, value)
+        setattr(self, key, value)

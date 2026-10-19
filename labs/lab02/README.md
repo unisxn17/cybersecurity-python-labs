@@ -58,24 +58,22 @@ python -m labs.lab02.main analyze \
 
 ### Правила виявлення
 
-| Мітка | Умова |
+| Причина | Умова |
 |---|---|
-| `BLACKMATCH` | домен або його батьківський домен є в чорному списку |
-| `LONG-DOMAIN(n)` | довжина домену ≥ `--min-domain-len` |
-| `LONG-SUBDOMAIN` | будь-яка мітка домену має ≥ 40 символів (regex) |
-| `DGA-DETECT` | мітка з ≥ 12 літер і цифр (обидва типи) з ентропією Шеннона ≥ 3.0 |
-| `SUSPICIOUS-TLD(.x)` | TLD зі списку `.zip .top .xyz .click .loan .work .gq .tk .ml .cf` |
-| `LONG-TXT` | TXT-запит до довгого домену (можливий DNS-тунель) |
+| `blacklisted` | домен є в чорному списку |
+| `long subdomain` | у домені є частина з ≥ 30 символів (regex) — типово для DGA і DNS-тунелів |
+| `suspicious TLD .x` | домен у зоні `.zip .top .xyz .click .tk .gq` (regex) |
+| `length N` | довжина домену ≥ `--min-domain-len` |
 
-Статистика типів запитів рахується через `collections.Counter`, вихідний CSV має
-колонки `Timestamp,ClientIP,Domain,QueryType,Length,Reasons`.
+Статистика типів запитів рахується через `collections.Counter`. Вихідний CSV має
+колонки `Timestamp,ClientIP,Domain,QueryType,Reasons`.
 
 ### Поведінка при помилках
 
-- Вхідний файл не знайдено або його не вдалося прочитати: `[ERROR]` у лог, код виходу `1`.
+- Вхідний файл не знайдено або не вдалося прочитати: `[ERROR]` у лог, код виходу `1`.
 - У CSV немає потрібних колонок: `[ERROR]`, код виходу `1`.
-- Рядок із некоректною датою чи доменом: `[WARNING] Line N skipped`, обробка триває.
-- Неправильне значення `--min-domain-len` (не число або ≤ 0): помилка argparse, код виходу `2`.
+- Рядок із некоректною датою: `[WARNING] Line N skipped`, обробка триває.
+- `--min-domain-len` не є цілим числом > 0: помилка argparse, код виходу `2`.
 
 ## Перевірка коду
 
